@@ -3,17 +3,17 @@ function runEpiMap(epiData, dsv, geoPoints, geoPolygons, remote){
 	if (remote){
 		data3 = dsv.parse(epiData);
 	} else {
-		data3 = epiData;		
+		data3 = epiData;
 	}
- 
+
     if (geoPolygons) {
         // Initialise 'polygons' layer.
         var analysisLayer = new ol.layer.Vector({
             name: "analysisLayer",
             source: new ol.source.Vector({}),
             zIndex: 0
-        });	
-        
+        });
+
         var formatPolygons = configFile.data.analysisLayer.geometry.format
         if(configFile.format.indexOf(formatPolygons) === -1){
             window[formatPolygons] = new ol.format[formatPolygons];
@@ -32,17 +32,17 @@ function runEpiMap(epiData, dsv, geoPoints, geoPolygons, remote){
             name: "analysisLayerPoints",
             source: new ol.source.Vector({}),
             zIndex: 1
-        });	
-        
+        });
+
         var formatPoints = configFile.data.analysisLayer.geometryPoints.format
         if(configFile.format.indexOf(formatPoints) === -1){
             window[formatPoints] = new ol.format[formatPoints];
             configFile.format.push(formatPoints);
-        }    
+        }
         analysisLayerPoints.getSource().addFeatures(window[formatPoints].readFeatures(geoPoints));
         $.each(analysisLayerPoints.getSource().getFeatures(), function(i, v) {
             v.setId("aLP" + i);
-        });        
+        });
         map.addLayer(analysisLayerPoints);
     }
 
@@ -55,10 +55,10 @@ function runEpiMap(epiData, dsv, geoPoints, geoPolygons, remote){
     var dim1Time    = cf1.dimension(function(d){return parseInt(d[config.dimTime]);});
     var dim1Geo     = cf1.dimension(function(d){return d[config.dimGeo];});
     var dim2Time    = cf2.dimension(function(d){return parseInt(+d[config.dimTime]);});
-    var dim2Geo     = cf2.dimension(function(d){return d[config.dimGeo];});       
+    var dim2Geo     = cf2.dimension(function(d){return d[config.dimGeo];});
     var groupM      = dim2Time.group().reduceSum(function(d){return parseInt(d[config.measure]);});
     var groupCM     = dim2Time.group().reduceSum(function(d){return parseInt(d[config.cumulative]);});
-    if (config.rate) {      
+    if (config.rate) {
         var groupR      = dim2Time.group().reduceSum(function(d){return parseFloat(d[config.rate]);});
     }
     if (config.cumulRate) {
@@ -73,12 +73,12 @@ function runEpiMap(epiData, dsv, geoPoints, geoPolygons, remote){
     $.each(groupGeo.top(Infinity), function(i, v){
         testGeo.push(v.key);
     });
-    
+
     // Get min/max values for proportional circles.
     function findRangeOfValues(array, key) {
         var testArray = jQuery.extend([], array);
         var minVal;
-        var result = [];    
+        var result = [];
         testArray.sort(function(a,b) {return (Number(a[key]) > Number(b[key])) ? 1 : ((Number(b[key]) > Number(a[key])) ? -1 : 0);} );
         $.each(testArray,function(i, v){
            if (Number(v[key]) !== 0) {
@@ -93,7 +93,7 @@ function runEpiMap(epiData, dsv, geoPoints, geoPolygons, remote){
     var locFields = configFile.data.analysisLayer.epiDataset.fieldsForAnalysis;
     configFile.initStats = {};
     configFile.initStats[locFields.measure] = findRangeOfValues(cf2.all(), locFields.measure);
-    configFile.initStats[locFields.cumulative] = findRangeOfValues(cf2.all(), locFields.cumulative);     
+    configFile.initStats[locFields.cumulative] = findRangeOfValues(cf2.all(), locFields.cumulative);
 
 // TODO : Fix adminSource
     var adminSource
@@ -102,36 +102,36 @@ function runEpiMap(epiData, dsv, geoPoints, geoPolygons, remote){
     } else {
         adminSource = analysisLayerPoints;
     }
-    
+
 
 //GLOBAL VARs
     window["appAnalysis"] = $("#selectorAnalysis").val();
-    window["analysisType"] = sourceObj[$("#selectorAnalysis").val()]["name"];      
+    window["analysisType"] = sourceObj[$("#selectorAnalysis").val()]["name"];
     window["analysisField"] = sourceObj[$("#selectorAnalysis").val()]["fieldRate"];
     window["analysisAbsoluteField"] = sourceObj[$("#selectorAnalysis").val()]["fieldAbsolute"];
-    
-    
-    
-    
+
+
+
+
     $("#selectorAnalysis").SumoSelect({
        floatWidth: 500
     });
     $("#selectorAnalysis").on('change', function(){
         clickArea.getFeatures().clear();
-        
+
         // GLOBAL VARs
-        window["appAnalysis"] = this.value;                        
+        window["appAnalysis"] = this.value;
         window["analysisType"] = sourceObj[this.value]["name"];
         window["analysisField"] = sourceObj[this.value]["fieldRate"];
-        window["analysisAbsoluteField"] = sourceObj[this.value]["fieldAbsolute"];     
-        
+        window["analysisAbsoluteField"] = sourceObj[this.value]["fieldAbsolute"];
+
         configFile.paramObject.gen.a = this.value;
         configFile.paramObject.method(analysisType);
-        
+
         // GLOBAL VARs
-        window["appAnalysis"] = analysisType;  
-        
-        displayAnalysis(analysisType);            
+        window["appAnalysis"] = analysisType;
+
+        displayAnalysis(analysisType);
         $("#selectorAdmin")[0].sumo.selectItem('default');
         sliderSize.noUiSlider.set([configFile.paramObject.param[analysisType].cS[0], configFile.paramObject.param[analysisType].cS[1]]);
     });
@@ -145,7 +145,7 @@ function runEpiMap(epiData, dsv, geoPoints, geoPolygons, remote){
         var name = v.get(geoFields.geoName);
         var code = v.get(geoFields.geoCode);
         if(testGeo.indexOf(code) !== -1){
-            $("#selectorAdmin").append('<option value="' + code + '">' + name + '</option>');				
+            $("#selectorAdmin").append('<option value="' + code + '">' + name + '</option>');
         }
     });
 
@@ -169,7 +169,7 @@ function runEpiMap(epiData, dsv, geoPoints, geoPolygons, remote){
                 .dimension(dim2Time)
                 .mouseZoomable(false)
                 .renderHorizontalGridLines(true)
-                .legend(dc.legend().x(0).y(10).itemHeight(13).gap(15))	
+                .legend(dc.legend().x(0).y(10).itemHeight(13).gap(15))
                 .group(groupCR, chartsLayout.cumulative.legend)
                 .title(function(d){return chartTooltipFunction(chartsLayout.cumulative.tooltip, d);})
                 .yAxisLabel(chartsLayout.cumulative.axis)
@@ -182,7 +182,7 @@ function runEpiMap(epiData, dsv, geoPoints, geoPolygons, remote){
                     geoSelectedChart_Cumulative.selectAll('circle').on("click", function(d) {
                         sliderWeek.noUiSlider.set(d.data.key);
                     });
-                });    
+                });
     }
     // For given geo feature : Chart for rates based on values (non-cumulative).
     if (config.rate) {
@@ -195,9 +195,9 @@ function runEpiMap(epiData, dsv, geoPoints, geoPolygons, remote){
                 .dimension(dim2Time)
                 .mouseZoomable(false)
                 .renderHorizontalGridLines(true)
-                .legend(dc.legend().x(0).y(10).itemHeight(13).gap(15))				
+                .legend(dc.legend().x(0).y(10).itemHeight(13).gap(15))
                 .group(groupR, chartsLayout.measure.legend)
-                .title(function(d){return chartTooltipFunction(chartsLayout.measure.tooltip, d);})				
+                .title(function(d){return chartTooltipFunction(chartsLayout.measure.tooltip, d);})
                 .yAxisLabel(chartsLayout.measure.axis)
                 .xAxisLabel(configFile.layout.dimensionIndicator)
                 .brushOn(false)
@@ -230,9 +230,9 @@ function runEpiMap(epiData, dsv, geoPoints, geoPolygons, remote){
                 dc.lineChart(geoSelectedChart_Combined)
                     .group(groupCM, chartsLayout.combined.line.legend)
                     .valueAccessor(function(d) {return d.value;})
-                    .title(function(d){return chartTooltipFunction(chartsLayout.combined.line.tooltip, d);})						
+                    .title(function(d){return chartTooltipFunction(chartsLayout.combined.line.tooltip, d);})
                     .ordinalColors(["rgba(255,191,0,1)"])
-                    .useRightYAxis(true)							
+                    .useRightYAxis(true)
             ])
             .yAxisLabel(chartsLayout.combined.bars.axis)
             .brushOn(false)
@@ -271,9 +271,9 @@ function runEpiMap(epiData, dsv, geoPoints, geoPolygons, remote){
                 dc.lineChart(geoAllChart_Combined)
                     .group(groupCM, chartsLayout.combined.line.legend)
                     .valueAccessor(function(d) {return d.value;})
-                    .title(function(d) {return chartTooltipFunction(chartsLayout.combined.line.tooltip, d);})							
+                    .title(function(d) {return chartTooltipFunction(chartsLayout.combined.line.tooltip, d);})
                     .ordinalColors(["rgba(255,191,0,1)"])
-                    .useRightYAxis(true)							
+                    .useRightYAxis(true)
             ])
             .yAxisLabel(chartsLayout.combined.bars.axis)
             .brushOn(false)
@@ -291,20 +291,23 @@ function runEpiMap(epiData, dsv, geoPoints, geoPolygons, remote){
                     sliderWeek.noUiSlider.set(d.data.key);
                 });
             });
-            
+
 /////////////	ANALYSIS - start
-// 
+//
+// Affiche les données sur la carte
 function displayAnalysis(analysis){
-    clickArea.getFeatures().clear();        
+    clickArea.getFeatures().clear();
     popup.setPosition(undefined);
+		// Si la couche est chargée
     if (geoPolygons) {
+			// Couche avec des sources et des features (objets)
         $.each(analysisLayer.getSource().getFeatures(), function(i, v) {
             var value = function(){
                 dim1Geo.filter(null);
                 dim1Geo.filter(v.get(geometryFile.geoCode));
                 var val1;
-                if(dim1Geo.top(Infinity).length !== 0){						
-                    val1 = parseFloat(dim1Geo.top(Infinity)[0][analysisField]);							
+                if(dim1Geo.top(Infinity).length !== 0){
+                    val1 = parseFloat(dim1Geo.top(Infinity)[0][analysisField]);
                 } else {
                     val1 = 0;
                 }
@@ -320,11 +323,11 @@ function displayAnalysis(analysis){
                 dim1Geo.filter(null);
                 dim1Geo.filter(v.get(geometryFile.geoCode));
                 var val1;
-                if(dim1Geo.top(Infinity).length !== 0){						
-                    val1 = parseFloat(dim1Geo.top(Infinity)[0][analysisAbsoluteField]);							
+                if(dim1Geo.top(Infinity).length !== 0){
+                    val1 = parseFloat(dim1Geo.top(Infinity)[0][analysisAbsoluteField]);
                 } else {
                     val1 = 0;
-                }               
+                }
                 return val1;
             };
             v.set(analysisAbsoluteField, value());
@@ -356,13 +359,13 @@ function displayAnalysis(analysis){
         analysisLayerPoints.setStyle(function(feature){
             var val = feature.get(analysisAbsoluteField);
             var layerType = feature.get("layerType");
-            return configFile.analysisFunctions.runAnalysis(val, layerType, analysisType);     
+            return configFile.analysisFunctions.runAnalysis(val, layerType, analysisType);
         });
     }
 }
 
 
-/////////////	ANALYSIS - end	
+/////////////	ANALYSIS - end
 
 /////////////	MAP INTERACTION - start
 
@@ -378,17 +381,17 @@ function displayAnalysis(analysis){
                 var layerType = feature.get("layerType");
                 var val;
                 if (layerType === "polygons"){
-                    val = feature.get(analysisField);   
+                    val = feature.get(analysisField);
                 } else {
                     val = feature.get(analysisAbsoluteField);
-                }                    
+                }
                 var style = configFile.analysisFunctions.runAnalysis(val, layerType, analysisType);
                 var cloneStyle = style.clone();
                 if (layerType === "polygons"){
-                    cloneStyle.getStroke().setWidth(configFile.analysisFunctions.style.outline.strokeWidth * 2);                    
+                    cloneStyle.getStroke().setWidth(configFile.analysisFunctions.style.outline.strokeWidth * 2);
                     cloneStyle.getStroke().setColor("rgb(30,144,255)");
                     cloneStyle.setZIndex(0);
-                } else {                        
+                } else {
                     var cloneStyle = new ol.style.Style({
                         image : new ol.style.Circle({
         //                    snapToPixel : "",
@@ -401,15 +404,15 @@ function displayAnalysis(analysis){
                                 color : configFile.paramObject.param[analysisType].cF
                             })
                         }),
-                        zIndex : 1                        
-                    }); 
+                        zIndex : 1
+                    });
                 }
                 return cloneStyle;
             }
         }
     });
     map.addInteraction(clickArea);
-    
+
 	var element_popup = $('#popup')[0];
 var content_popup = $('#popup-content')[0];
 
@@ -423,7 +426,7 @@ var popup = new ol.Overlay({
 
 map.addOverlay(popup);
 
-    $('.ol-popup').css("visibility", "visible"); 
+    $('.ol-popup').css("visibility", "visible");
 
     $('.popupClose').on('click', function(){
             popup.setPosition(undefined);
@@ -431,23 +434,23 @@ map.addOverlay(popup);
             clickArea.getFeatures().remove(a[0]);
             $("#selectorAdmin")[0].sumo.selectItem('default');
 //            $("#infoAdmin").html('');
-            $("#adminRow").hide(500);                
+            $("#adminRow").hide(500);
     });
 
     clickArea.on('select', function(e){
         var test = map.getPixelFromCoordinate(e.mapBrowserEvent.coordinate);
         yemcholera_clickFlag = true;
-        popup.setPosition(undefined);  
+        popup.setPosition(undefined);
         var a = $('#selectorAnalysis').val();
         if (hoovered.length !== 0) {
             var h = hoovered[0];
             var lT = h.get("layerType");
-            var field = lT === "polygons" ? configFile.analysisFunctions.matchAbbAnalysis[a].fieldRate : configFile.analysisFunctions.matchAbbAnalysis[a].fieldAbsolute;                
+            var field = lT === "polygons" ? configFile.analysisFunctions.matchAbbAnalysis[a].fieldRate : configFile.analysisFunctions.matchAbbAnalysis[a].fieldAbsolute;
             var style = configFile.analysisFunctions.cacheObj[lT][analysisType][h.get(field)];
-            h.setStyle(style);    
+            h.setStyle(style);
             var cloneStyle = style.clone();
             if (lT === "polygons") {
-                cloneStyle.getStroke().setWidth(configFile.analysisFunctions.style.outline.strokeWidth * 2);                    
+                cloneStyle.getStroke().setWidth(configFile.analysisFunctions.style.outline.strokeWidth * 2);
                 cloneStyle.getStroke().setColor("rgb(30,144,255)");
                 cloneStyle.setZIndex(0);
                 h.setStyle(cloneStyle);
@@ -463,12 +466,12 @@ map.addOverlay(popup);
                             color : configFile.paramObject.param[analysisType].cF
                         })
                     }),
-                    zIndex : 1                        
-                }); 
-                h.setStyle(cloneStyle);                      
+                    zIndex : 1
+                });
+                h.setStyle(cloneStyle);
             }
-            hoovered = [];                
-        };                   
+            hoovered = [];
+        };
 //        if (e.selected.length > 0) {
 //            if (e.selected[0] !== undefined && ((e.selected[0].get(analysisField) > 0 || e.selected[0].get(analysisAbsoluteField) > 0))){
 //                var f = e.selected[0];
@@ -477,7 +480,7 @@ map.addOverlay(popup);
 //                var style = configFile.analysisFunctions.cacheObj[lT][analysisType][f.get(field)];
 //                var cloneStyle = style.clone();
 //                if (lT === "polygons") {
-//                    cloneStyle.getStroke().setWidth(configFile.analysisFunctions.style.outline.strokeWidth * 2);                    
+//                    cloneStyle.getStroke().setWidth(configFile.analysisFunctions.style.outline.strokeWidth * 2);
 //                    cloneStyle.getStroke().setColor("rgb(30,144,255)");
 //                    cloneStyle.setZIndex(0);
 //                    f.setStyle(cloneStyle);
@@ -493,10 +496,10 @@ map.addOverlay(popup);
 //                                color : configFile.paramObject.param[analysisType].cF
 //                            })
 //                        }),
-//                        zIndex : 1                        
-//                    }); 
-//                    f.setStyle(cloneStyle);                    
-//                }  
+//                        zIndex : 1
+//                    });
+//                    f.setStyle(cloneStyle);
+//                }
 //            }
 //        }
 //        if (e.deselected.length > 0) {
@@ -507,15 +510,15 @@ map.addOverlay(popup);
 //                var style = configFile.analysisFunctions.cacheObj[lT][analysisType][f.get(field)];
 //                f.setStyle(style);
 //            }
-//        }     
+//        }
 
-//        var analysisField = configFile.analysisFunctions.matchAbbAnalysis[a]["fieldRate"];  
+//        var analysisField = configFile.analysisFunctions.matchAbbAnalysis[a]["fieldRate"];
 
         var selected = e.target.getFeatures().getArray()[0];
         if (selected) {
             if(testGeo.indexOf(selected.get(geoFields.geoCode)) !== -1){
                 var lT = selected.get("layerType");
-                var field = lT === "polygons" ? configFile.analysisFunctions.matchAbbAnalysis[a].fieldRate : configFile.analysisFunctions.matchAbbAnalysis[a].fieldAbsolute;                    
+                var field = lT === "polygons" ? configFile.analysisFunctions.matchAbbAnalysis[a].fieldRate : configFile.analysisFunctions.matchAbbAnalysis[a].fieldAbsolute;
                 var loc = selected.get(geoFields.geoCode);
                 var loc_selected = selected.get(geoFields.geoName);
                 var val_selected = selected.get(field);
@@ -527,7 +530,7 @@ map.addOverlay(popup);
                 }
                 content_popup.innerHTML = '<div><b>'+loc_selected+'</b><br>' + text + '</div>';
                 popup.setPosition(e.mapBrowserEvent.coordinate);
-                $("#selectorAdmin")[0].sumo.selectItem(loc);	
+                $("#selectorAdmin")[0].sumo.selectItem(loc);
             } else {
                 $("#selectorAdmin")[0].sumo.selectItem('default');
                 $("#adminRow").hide(500);
@@ -557,7 +560,7 @@ map.addOverlay(popup);
             var analysisField = configFile.analysisFunctions.matchAbbAnalysis[an]["fieldRate"];
             if (!analysisField) {
                 analysisField = configFile.analysisFunctions.matchAbbAnalysis[an]["fieldAbsolute"];
-            }       
+            }
             if($("#selectorAdmin").val() !== "default"){
                 function filterAdm(a){
                     var Adm = $("#selectorAdmin").val();
@@ -565,10 +568,10 @@ map.addOverlay(popup);
                 }
                 var e = adminSource.getSource().getFeatures().filter(filterAdm);
                 if (test === true) {
-                    clickArea.getFeatures().push(e[0]);                        
-                }       
+                    clickArea.getFeatures().push(e[0]);
+                }
                 if (yemcholera_clickFlag === false) {
-                    
+
                     var loc_selected = e[0].get(geoFields.geoName);
                     var val_selected = e[0].get(analysisField);
                     if (!val_selected) {
@@ -590,7 +593,7 @@ map.addOverlay(popup);
 
                 dim2Geo.filter(null);
                 dim2Geo.filter(e[0].get(geoFields.geoCode));
-                
+
                 $("#weeklyChartTitle").html('<strong>' + e[0].get(geoFields.geoName) + ' - ' + chartsLayout.combined.title + '</strong>');
                 if (config.cumulRate) {
                     $("#weeklyChartTitle_AR").html('<strong>' + e[0].get(geoFields.geoName) + ' - ' + chartsLayout.cumulative.title + '</strong>');
@@ -612,16 +615,16 @@ map.addOverlay(popup);
                 $("#adminRow").hide(500);
             }
     });
-    
+
 
     var cursorHoverStyle = "pointer";
     var target = map.getTarget();
     var jTarget = typeof target === "string" ? $("#"+target) : $(target);
     var hoovered = [];
-    
-    
-    
-    
+
+
+
+
     map.on('pointermove', function(e){
         if (hoovered.length !== 0){
             var h = hoovered[0];
@@ -634,8 +637,8 @@ map.addOverlay(popup);
         // Detect feature at mouse position.
         var hit = map.forEachFeatureAtPixel(mouseCoordInMapPixels, function (feature, layer) {
             if (feature !== undefined && ((feature.get(analysisField) > 0 || feature.get(analysisAbsoluteField) > 0))) {
-                    f = feature;    
-                    return true;					
+                    f = feature;
+                    return true;
                 }
         });
         if (hit) {
@@ -657,7 +660,7 @@ map.addOverlay(popup);
 //            if (validate) {
 //                console.log(configFile.analysisFunctions.cacheObj[f.get("layerType")][analysisType]);
 //                var style = configFile.analysisFunctions.cacheObj[f.get("layerType")][analysisType][f.get(field)];
-//                var cloneStyle = style.clone();                        
+//                var cloneStyle = style.clone();
 //                if (f.get("layerType") === "polygons") {
 //                    cloneStyle.getStroke().setColor([0,0,0,1]);
 //                    cloneStyle.getStroke().setWidth(configFile.analysisFunctions.style.outline.strokeWidth * 1.5);
@@ -675,36 +678,36 @@ map.addOverlay(popup);
 //                                color : configFile.paramObject.param[analysisType].cF
 //                            })
 //                        }),
-//                        zIndex : 15                       
-//                    });                         
+//                        zIndex : 15
+//                    });
 //                    f.setStyle(cloneStyle);
-//                } 
+//                }
 //                hoovered[0] = f;
 //            }
-        } else {             
+        } else {
             jTarget.css("cursor", "");
         }
     });
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /////////////	MAP INTERACTION - end
 
@@ -722,7 +725,12 @@ map.addOverlay(popup);
     });
 
     function updateValues(){
-        $('#selectWeek_value').html("<i>" + configFile.layout.dimensionIndicator + " " + parseInt($('#selectWeek')[0].noUiSlider.get()) + "</i>");
+				const value = parseInt($('#selectWeek')[0].noUiSlider.get())
+				if (value <= 52) {
+					$('#selectWeek_value').html("<i>" + configFile.layout.dimensionIndicator + " " + parseInt($('#selectWeek')[0].noUiSlider.get()) + " - 2018</i>");
+				} else {
+					$('#selectWeek_value').html("<i>" + configFile.layout.dimensionIndicator + " " + (parseInt($('#selectWeek')[0].noUiSlider.get()) - 52) + " - 2019</i>");
+				}
     };
     updateValues();
 
@@ -732,31 +740,31 @@ map.addOverlay(popup);
         if(Array.isArray(sliderValue) === false){
             if($(this).hasClass('glyphicon-circle-arrow-left') === true){
                 if(sliderValue > slider.options.range.min){
-                    slider.set(parseInt(sliderValue) - 1);							
+                    slider.set(parseInt(sliderValue) - 1);
                 }
             } else {
-                if(sliderValue < slider.options.range.max){						
+                if(sliderValue < slider.options.range.max){
                     slider.set(parseInt(sliderValue) + 1);
                 }
             }
         } else {
             if($(this).hasClass('glyphicon-circle-arrow-right') === true){
                 if(sliderValue[0] > slider.options.range.min){
-                    slider.set([parseInt(sliderValue[0]) - 1, parseInt(sliderValue[1]) - 1]);							
+                    slider.set([parseInt(sliderValue[0]) - 1, parseInt(sliderValue[1]) - 1]);
                 }
             } else {
-                if(sliderValue[1] < slider.options.range.max){						
-                    slider.set([parseInt(sliderValue[0]) + 1, parseInt(sliderValue[1]) + 1]);							
+                if(sliderValue[1] < slider.options.range.max){
+                    slider.set([parseInt(sliderValue[0]) + 1, parseInt(sliderValue[1]) + 1]);
                 }
-            }				
+            }
         }
     });
 
     dc.renderAll();
-    
+
     sliderWeek.noUiSlider.on('update', function(value){
         updateValues();
-        dim1Time.filter(null);					
+        dim1Time.filter(null);
         dim1Time.filter(parseInt(value));
         configFile.paramObject.gen.f = parseInt(value);
         configFile.paramObject.method(analysisType);
@@ -768,9 +776,9 @@ map.addOverlay(popup);
     });
 /////////////	SLIDERS - end
     $("#container").show();
-    $("#sideLegend").show();		
+    $("#sideLegend").show();
     $("#forExport").show();
-    $("#overallRow").show();	
+    $("#overallRow").show();
 
 //////////////// EXPORT - PDF
 
@@ -793,7 +801,7 @@ setExportPdf(config);
     sliderTransparency.noUiSlider.on('update', function(value){
         configFile.analysisFunctions.style.colors.transparency = value[0];
         configFile.paramObject.gen.t = value[0];
-        configFile.paramObject.method(analysisType);            
+        configFile.paramObject.method(analysisType);
         configFile.analysisFunctions.listColors(configFile.analysisFunctions.analysis_1, "analysis_1");
         configFile.analysisFunctions.cacheObj.polygons = {};
         $("#transparencyVal").html("Opacity " + value);
@@ -818,8 +826,8 @@ setExportPdf(config);
         configFile.paramObject.param[analysisType].cS = [val1, val2];
         configFile.paramObject.method(analysisType);
         displayAnalysis($("#selectorAnalysis").val());
-    });    
-    
+    });
+
 	var sliderWidth = $('#selectWidth')[0];
 	noUiSlider.create(sliderWidth, {
 		start: parseFloat(configFile.paramObject.param[analysisType].cW),
@@ -831,7 +839,7 @@ setExportPdf(config);
 		behaviour: 'drag',
 		step: 0.1
 	});
-	
+
 	sliderWidth.noUiSlider.on('update', function(value){
 	        configFile.analysisFunctions.cacheObj.points = {};
 	        $("#Pick_strokeWidth").html(value);
@@ -839,14 +847,14 @@ setExportPdf(config);
 	        configFile.paramObject.method(analysisType);
 	        displayAnalysis($("#selectorAnalysis").val());
 	});
-	    
+
 	$(".minicolors-input").on('change', function() {
 	    configFile.analysisFunctions.cacheObj.points = {};
 	    configFile.paramObject.param[analysisType][this.dataset.obj] = this.value.replace(/ /g,'');
 	    configFile.paramObject.method(analysisType);
-	    displayAnalysis($("#selectorAnalysis").val());            
+	    displayAnalysis($("#selectorAnalysis").val());
 	});
-	
+
 	if (configFile.layout.displayAppDisclaimer) {
 	    $("#inAppDisclaimer").html('<i>' + configFile.layout.appDisclaimer + '</i>');
 	    $("#inAppDisclaimerRow").show();
